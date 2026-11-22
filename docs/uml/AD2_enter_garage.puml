@@ -1,0 +1,53 @@
+@startuml AD2_enter_garage
+!include _style.iuml
+title AD-2  Enter Garage with ANPR / QR and Manual Override (UC-08 extended by UC-10)
+|ANPR Camera|
+start
+:Read plate at entry lane;
+|SmartPark System|
+if () then ([confidence >= 0.90])
+  :Match plate to\nconfirmed reservation;
+else ([confidence < 0.90])
+  :Ask driver to scan QR pass;
+  |Driver|
+  :Scan QR pass at reader;
+  |SmartPark System|
+  :Match QR token to\nconfirmed reservation;
+endif
+if () then ([reservation found, this garage,\nstart - 15 min <= now <= end,\nnot used before])
+  fork
+    :Start parking session;
+  fork again
+    :Open barrier;
+  fork again
+    :Send floor and spot\nto driver;
+  fork again
+    :Update availability;
+  end fork
+  |Driver|
+  :Drive to assigned spot;
+  stop
+else ([no valid reservation])
+  |SmartPark System|
+  :Deny entry, show reason\non lane display;
+  :Alert attendant;
+  |Attendant|
+  :Check driver's proof of booking;
+  if () then ([valid proof])
+    :Record manual override\nwith reason;
+    |SmartPark System|
+    fork
+      :Write override to audit log;
+    fork again
+      :Open barrier and\nstart session;
+    end fork
+    |Driver|
+    :Drive to assigned spot;
+    stop
+  else ([no proof])
+    |Attendant|
+    :Ask driver to leave the lane;
+    stop
+  endif
+endif
+@enduml

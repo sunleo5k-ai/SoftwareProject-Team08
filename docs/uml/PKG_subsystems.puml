@@ -1,0 +1,50 @@
+@startuml PKG_subsystems
+!include _style.iuml
+title PKG-1  Subsystem Decomposition and Dependencies
+skinparam FolderBackgroundColor #EEF3FA
+skinparam FolderBorderColor #16324F
+skinparam nodesep 35
+skinparam ranksep 60
+hide empty members
+
+folder "Presentation\n(web client + REST routers)" as P
+folder "auth\nUC-01" as auth
+folder "garage-catalog / availability\nUC-02" as avail
+folder "reservation\nUC-04, UC-06, UC-07" as res
+folder "payment\nUC-05" as pay
+folder "pricing\nUC-12" as price
+folder "forecast (AI)\nUC-03, UC-14" as fc
+folder "gate-access\nUC-08, UC-09, UC-10" as gate
+folder "admin\nUC-11" as admin
+folder "reporting / corporate\nUC-13" as rep
+folder "notification" as notif
+folder "data access (ORM entities)" as data
+
+P ..> auth : <<use>>
+P ..> avail : <<use>>
+P ..> res : <<use>>
+P ..> gate : <<use>>
+P ..> admin : <<use>>
+P ..> rep : <<use>>
+P ..> price : <<use>>
+P ..> fc : <<use>>
+res ..> avail : findFreeSpot()
+res ..> price : quote()
+res ..> pay : charge() / refund()
+res ..> notif : send()
+price ..> fc : predict()
+gate ..> pay : charge() overstay
+gate ..> notif : send()
+admin ..> price : preview()
+rep ..> avail : capacity
+auth ..> data
+avail ..> data
+res ..> data
+pay ..> data
+price ..> data
+fc ..> data
+gate ..> data
+admin ..> data
+rep ..> data
+notif ..> data
+@enduml

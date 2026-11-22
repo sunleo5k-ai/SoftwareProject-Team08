@@ -1,0 +1,36 @@
+@startuml AD3_exit_garage
+!include _style.iuml
+title AD-3  Exit Garage and Close Session (UC-09)
+|ANPR Camera|
+start
+:Read plate at exit lane;
+|SmartPark System|
+:Find active parking session\nfor plate or QR token;
+if () then ([no active session])
+  :Deny exit and alert attendant;
+  |Attendant|
+  :Resolve at the lane;
+  stop
+else ([session found])
+  |SmartPark System|
+  if () then ([exit time > end time + grace period])
+    :Calculate overstay fee\n(started hours x base rate x 1.5);
+    |Payment Gateway|
+    :Charge overstay fee\nto saved payment token;
+    |SmartPark System|
+  else ([on time])
+  endif
+  fork
+    :Close parking session;
+  fork again
+    :Open barrier;
+  fork again
+    :Send receipt notification;
+  fork again
+    :Mark reservation completed\nand free the spot;
+  end fork
+  |Driver|
+  :Leave the garage;
+  stop
+endif
+@enduml

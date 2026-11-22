@@ -1,0 +1,33 @@
+...........................................                              [100%]
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.18-final-0 _______________
+
+Name                                           Stmts   Miss  Cover
+------------------------------------------------------------------
+backend/app/__init__.py                            0      0   100%
+backend/app/clock.py                              13      1    92%
+backend/app/config.py                             28      4    86%
+backend/app/database.py                           16      0   100%
+backend/app/main.py                               44     11    75%
+backend/app/models.py                            237      0   100%
+backend/app/routers/__init__.py                    0      0   100%
+backend/app/routers/admin.py                     236     30    87%
+backend/app/routers/auth.py                       90     22    76%
+backend/app/routers/driver.py                    150     12    92%
+backend/app/routers/gate.py                       62      7    89%
+backend/app/security.py                           41      2    95%
+backend/app/seed.py                              125      3    98%
+backend/app/services/__init__.py                   0      0   100%
+backend/app/services/audit.py                     10      0   100%
+backend/app/services/auth_service.py              61      3    95%
+backend/app/services/availability_service.py      52      2    96%
+backend/app/services/forecast_service.py         125      5    96%
+backend/app/services/gate_service.py             126     14    89%
+backend/app/services/notification_service.py       7      0   100%
+backend/app/services/payment_gateway.py           12      0   100%
+backend/app/services/pricing_service.py           80      9    89%
+backend/app/services/report_service.py            72      2    97%
+backend/app/services/reservation_service.py      196     17    91%
+------------------------------------------------------------------
+TOTAL                                           1783    144    92%
+43 passed in 13.98s

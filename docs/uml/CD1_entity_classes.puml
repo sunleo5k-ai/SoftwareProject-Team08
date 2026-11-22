@@ -1,0 +1,221 @@
+@startuml CD1_entity_classes
+!include _style.iuml
+title CD-1  SmartPark Analysis Class Diagram - Entity Classes
+hide circle
+hide empty members
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 55
+
+abstract class User <<entity>> {
+  -userId: Integer
+  -name: String
+  -email: String
+  -phone: String
+  -passwordHash: String
+  -isVerified: Boolean
+  -failedLogins: Integer
+  -lockedUntil: DateTime
+  -notifyChannel: String
+  +verifyOtp(code: String): Boolean
+  +checkPassword(pw: String): Boolean
+  +lock(minutes: Integer): void
+}
+class Driver <<entity>>
+class CorporateClient <<entity>>
+class Attendant <<entity>>
+class Administrator <<entity>>
+class CorporateAccount <<entity>> {
+  -accountId: Integer
+  -companyName: String
+  -billingEmail: String
+  -monthlyPass: Boolean
+  +monthlyTotal(month: String): Float
+}
+class Vehicle <<entity>> {
+  -vehicleId: Integer
+  -plateNumber: String
+  -plateSource: String
+  -vehicleType: String
+  -hasAccessiblePermit: Boolean
+}
+class Garage <<entity>> {
+  -garageId: Integer
+  -name: String
+  -area: String
+  -address: String
+  -latitude: Float
+  -longitude: Float
+  -isActive: Boolean
+  +freeSpots(type: String): Integer
+}
+class Floor <<entity>> {
+  -floorId: Integer
+  -levelNo: Integer
+  -name: String
+}
+class Zone <<entity>> {
+  -zoneId: Integer
+  -name: String
+}
+class Spot <<entity>> {
+  -spotId: Integer
+  -code: String
+  -spotType: String
+  -isActive: Boolean
+  -sensorOccupied: Boolean
+  +isFree(start: DateTime, end: DateTime): Boolean
+}
+class PricingRule <<entity>> {
+  -ruleId: Integer
+  -version: Integer
+  -baseStandard: Float
+  -baseEv: Float
+  -baseAccessible: Float
+  -multLow, multNormal, multHigh, multPeak: Float
+  -floorMultiplier: Float
+  -capMultiplier: Float
+  -graceMinutes: Integer
+  -freeCancelMinutes: Integer
+  -lateRefundPct: Integer
+  -overstayMultiplier: Float
+  -effectiveFrom: DateTime
+  +baseFor(type: String): Float
+  +multiplierFor(occupancy: Float, type: String): Float
+}
+class Reservation <<entity>> {
+  -reservationId: Integer
+  -bookingRef: String
+  -qrToken: String
+  -startTime: DateTime
+  -endTime: DateTime
+  -status: ReservationStatus
+  -holdExpiresAt: DateTime
+  -paymentAttempts: Integer
+  +confirm(token: String): void
+  +cancel(now: DateTime): Float
+  +modify(start: DateTime, end: DateTime): void
+  +markNoShow(): void
+}
+class Quote <<entity>> {
+  -baseAmount: Float
+  -demandAdjustment: Float
+  -vat: Float
+  -fees: Float
+  -total: Float
+  -avgMultiplier: Float
+  -forecastUsed: Boolean
+}
+class Payment <<entity>> {
+  -paymentId: Integer
+  -receiptNo: String
+  -kind: String
+  -amount: Float
+  -status: String
+  -gatewayRef: String
+  -paymentToken: String
+  -createdAt: DateTime
+}
+class Refund <<entity>> {
+  -refundId: Integer
+  -amount: Float
+  -gatewayRef: String
+  -reason: String
+  -createdAt: DateTime
+}
+class ParkingSession <<entity>> {
+  -sessionId: Integer
+  -entryTime: DateTime
+  -exitTime: DateTime
+  -entryMethod: String
+  -status: String
+  -overstayFee: Float
+  +close(exitTime: DateTime): Float
+}
+class GateEvent <<entity>> {
+  -eventId: Integer
+  -lane: String
+  -direction: String
+  -plateText: String
+  -confidence: Float
+  -qrUsed: Boolean
+  -decision: String
+  -reason: String
+  -disputeOpen: Boolean
+  -createdAt: DateTime
+}
+class OverrideLog <<entity>> {
+  -overrideId: Integer
+  -plateText: String
+  -decision: String
+  -reason: String
+  -createdAt: DateTime
+}
+class Notification <<entity>> {
+  -notificationId: Integer
+  -channel: String
+  -type: String
+  -message: String
+  -isRead: Boolean
+  -createdAt: DateTime
+}
+class AuditLog <<entity>> {
+  -auditId: Integer
+  -action: String
+  -entity: String
+  -oldValue: String
+  -newValue: String
+  -createdAt: DateTime
+}
+class OccupancyHistory <<entity>> {
+  -hourStart: DateTime
+  -occupancyPct: Float
+}
+class ForecastModel <<entity>> {
+  -modelId: Integer
+  -algorithm: String
+  -trainedAt: DateTime
+  -scheduledFor: DateTime
+  -nSamples: Integer
+  -maePct: Float
+  -status: String
+  +predict(garageId: Integer, hour: DateTime): Float
+}
+enum ReservationStatus <<enumeration>> {
+  Held
+  Confirmed
+  InUse
+  Completed
+  Cancelled
+  NoShow
+  Expired
+}
+
+User <|-- Driver
+User <|-- Attendant
+User <|-- Administrator
+Driver <|-- CorporateClient
+
+CorporateAccount "1" -- "1..*" CorporateClient : employs >
+Driver "1" -- "0..*" Vehicle : owns >
+Driver "1" -- "0..*" Reservation : makes >
+Vehicle "1" -- "0..*" Reservation : is booked for <
+Garage "1" *-- "1..*" Floor : has >
+Floor "1" *-- "1..*" Zone : divided into >
+Zone "1" *-- "1..*" Spot : contains >
+Garage "1" -- "1..*" PricingRule : priced by >
+Reservation "0..*" -- "1" Spot : assigns >
+Reservation "0..*" -- "1" PricingRule : quoted with >
+Reservation "1" *-- "1" Quote : has >
+Reservation "1" -- "0..*" Payment : paid by >
+Payment "1" -- "0..*" Refund : refunded by >
+Reservation "1" -- "0..1" ParkingSession : used by >
+Garage "1" -- "0..*" GateEvent : records >
+Attendant "1" -- "0..*" OverrideLog : records >
+OverrideLog "0..*" -- "0..1" Reservation : refers to >
+User "1" -- "0..*" Notification : receives >
+User "0..1" -- "0..*" AuditLog : performs >
+Garage "1" -- "0..*" OccupancyHistory : measured as >
+ForecastModel "0..*" ..> "0..*" OccupancyHistory : trained on >
+Reservation ..> ReservationStatus
+@enduml

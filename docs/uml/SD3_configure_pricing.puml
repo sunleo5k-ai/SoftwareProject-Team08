@@ -1,0 +1,41 @@
+@startuml SD3_configure_pricing
+!include _style.iuml
+title SD-3  Configure Pricing Rules (UC-12)
+autonumber
+actor "Garage Admin" as A
+boundary ":PricingRulesView" as V
+control ":PricingController" as PC
+entity ":PricingRule" as PR
+entity ":AuditLog" as AL
+
+A -> V : open Pricing Rules (garageId)
+V -> PC : getRules(garageId)
+PC -> PR : active(garageId)
+PR --> PC : version n
+PC --> V : rules + preview(30/60/90 %)
+A -> V : edit values, Preview
+V -> PC : preview(values)
+PC -> PC : validateRule(values)
+alt invalid values
+  PC --> V : errors (e.g. cap > 2.0)
+  V --> A : show errors next to fields
+else valid
+  PC --> V : prices at 30/60/90 %
+end
+A -> V : Save new version (expectedVersion = n)
+V -> PC : saveRule(garageId, values, n)
+activate PC
+PC -> PC : validateRule(values)
+PC -> PR : latest(garageId)
+alt latest.version != n
+  PC --> V : 409 another admin saved first
+  V --> A : "please reload"
+else same version
+  PC -> PR ** : create(version = n + 1, effectiveFrom)
+  PC -> AL ** : create(user, old values, new values)
+  PC --> V : saved, version n + 1
+  V --> A : confirmation + version history
+end
+deactivate PC
+note over PR : Confirmed reservations keep\nthe price they were quoted.
+@enduml

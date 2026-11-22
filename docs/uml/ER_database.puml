@@ -1,0 +1,221 @@
+@startuml ER_database
+!include _style.iuml
+title DB-1  SmartPark Database Design (PK = primary key, FK = foreign key)
+hide circle
+hide empty members
+skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 45
+skinparam ClassHeaderBackgroundColor #16324F
+skinparam ClassFontColor #FFFFFF
+
+entity corporate_accounts {
+  * account_id : INTEGER <<PK>>
+  --
+  * company_name : VARCHAR(120)
+  * billing_email : VARCHAR(120)
+  monthly_pass : BOOLEAN
+}
+entity users {
+  * user_id : INTEGER <<PK>>
+  --
+  * name : VARCHAR(100)
+  * email : VARCHAR(120) <<UNIQUE>>
+  * phone : VARCHAR(20)
+  * password_hash : VARCHAR(100)
+  * role : VARCHAR(20)
+  is_verified, is_active : BOOLEAN
+  otp_code : VARCHAR(6)
+  failed_logins : INTEGER
+  locked_until : DATETIME
+  notify_channel : VARCHAR(10)
+  corporate_account_id : INTEGER <<FK>>
+  * created_at : DATETIME
+}
+entity user_sessions {
+  * token : VARCHAR(64) <<PK>>
+  --
+  * user_id : INTEGER <<FK>>
+  * created_at, last_seen : DATETIME
+}
+entity vehicles {
+  * vehicle_id : INTEGER <<PK>>
+  --
+  * user_id : INTEGER <<FK>>
+  * plate_number : VARCHAR(15)
+  plate_source, vehicle_type : VARCHAR
+  has_accessible_permit : BOOLEAN
+  UNIQUE(user_id, plate_number)
+}
+entity garages {
+  * garage_id : INTEGER <<PK>>
+  --
+  * name : VARCHAR(100) <<UNIQUE>>
+  * area, address : VARCHAR
+  * latitude, longitude : FLOAT
+  is_active : BOOLEAN
+}
+entity floors {
+  * floor_id : INTEGER <<PK>>
+  --
+  * garage_id : INTEGER <<FK>>
+  * level_no : INTEGER
+  * name : VARCHAR(40)
+  UNIQUE(garage_id, level_no)
+}
+entity zones {
+  * zone_id : INTEGER <<PK>>
+  --
+  * floor_id : INTEGER <<FK>>
+  * name : VARCHAR(20)
+}
+entity spots {
+  * spot_id : INTEGER <<PK>>
+  --
+  * zone_id : INTEGER <<FK>>
+  * code : VARCHAR(12)
+  spot_type : VARCHAR(12)
+  is_active, sensor_occupied : BOOLEAN
+  map_x, map_y : INTEGER
+}
+entity pricing_rules {
+  * rule_id : INTEGER <<PK>>
+  --
+  * garage_id : INTEGER <<FK>>
+  * version : INTEGER
+  * base_standard, base_ev, base_accessible : FLOAT
+  mult_low, mult_normal, mult_high, mult_peak : FLOAT
+  floor_multiplier, cap_multiplier : FLOAT
+  grace_minutes, free_cancel_minutes, late_refund_pct : INTEGER
+  overstay_multiplier : FLOAT
+  * effective_from, created_at : DATETIME
+  created_by : INTEGER <<FK>>
+  UNIQUE(garage_id, version)
+}
+entity reservations {
+  * reservation_id : INTEGER <<PK>>
+  --
+  * booking_ref : VARCHAR(12) <<UNIQUE>>
+  * qr_token : VARCHAR(40) <<UNIQUE>>
+  * user_id, vehicle_id, garage_id, spot_id, pricing_rule_id : INTEGER <<FK>>
+  * start_time, end_time : DATETIME
+  * status : VARCHAR(12)
+  hold_expires_at : DATETIME
+  payment_attempts : INTEGER
+  * base_amount, demand_adjustment, vat, fees, total, avg_multiplier : FLOAT
+  forecast_used, reminder_sent : BOOLEAN
+  payment_token : VARCHAR(40)
+  * created_at : DATETIME
+  cancelled_at : DATETIME
+}
+entity payments {
+  * payment_id : INTEGER <<PK>>
+  --
+  * receipt_no : VARCHAR(16) <<UNIQUE>>
+  * reservation_id, user_id : INTEGER <<FK>>
+  * kind, status : VARCHAR(12)
+  * amount : FLOAT
+  * gateway_ref, payment_token : VARCHAR(40)
+  * created_at : DATETIME
+}
+entity refunds {
+  * refund_id : INTEGER <<PK>>
+  --
+  * payment_id : INTEGER <<FK>>
+  * amount : FLOAT
+  * gateway_ref : VARCHAR(40)
+  * reason : VARCHAR(80)
+  * created_at : DATETIME
+}
+entity parking_sessions {
+  * session_id : INTEGER <<PK>>
+  --
+  * reservation_id : INTEGER <<FK, UNIQUE>>
+  * garage_id : INTEGER <<FK>>
+  * entry_time : DATETIME
+  exit_time : DATETIME
+  * entry_method : VARCHAR(10)
+  status : VARCHAR(10)
+  overstay_fee : FLOAT
+}
+entity gate_events {
+  * event_id : INTEGER <<PK>>
+  --
+  * garage_id : INTEGER <<FK>>
+  * lane : VARCHAR(10)
+  * direction : VARCHAR(5)
+  plate_text : VARCHAR(15)
+  confidence : FLOAT
+  qr_used, dispute_open : BOOLEAN
+  * decision : VARCHAR(6)
+  * reason : VARCHAR(30)
+  * created_at : DATETIME
+}
+entity override_logs {
+  * override_id : INTEGER <<PK>>
+  --
+  * attendant_id, garage_id : INTEGER <<FK>>
+  reservation_id : INTEGER <<FK>>
+  * plate_text : VARCHAR(15)
+  * decision : VARCHAR(6)
+  * reason : VARCHAR(200)
+  * created_at : DATETIME
+}
+entity notifications {
+  * notification_id : INTEGER <<PK>>
+  --
+  * user_id : INTEGER <<FK>>
+  * channel : VARCHAR(10)
+  * type : VARCHAR(30)
+  * message : TEXT
+  is_read : BOOLEAN
+  * created_at : DATETIME
+}
+entity audit_logs {
+  * audit_id : INTEGER <<PK>>
+  --
+  user_id : INTEGER <<FK>>
+  * action : VARCHAR(40)
+  * entity : VARCHAR(30)
+  entity_id : VARCHAR(20)
+  old_value, new_value : TEXT
+  * created_at : DATETIME
+}
+entity occupancy_history {
+  * history_id : INTEGER <<PK>>
+  --
+  * garage_id : INTEGER <<FK>>
+  * hour_start : DATETIME
+  * occupancy_pct : FLOAT
+}
+entity forecast_models {
+  * model_id : INTEGER <<PK>>
+  --
+  * algorithm : VARCHAR(40)
+  trained_at, scheduled_for : DATETIME
+  n_samples : INTEGER
+  mae_pct : FLOAT
+  * status : VARCHAR(12)
+}
+
+corporate_accounts ||--o{ users
+users ||--o{ user_sessions
+users ||--o{ vehicles
+users ||--o{ reservations
+users ||--o{ notifications
+users |o--o{ audit_logs
+garages ||--|{ floors
+floors ||--|{ zones
+zones ||--|{ spots
+garages ||--|{ pricing_rules
+garages ||--o{ occupancy_history
+garages ||--o{ gate_events
+spots ||--o{ reservations
+vehicles ||--o{ reservations
+pricing_rules ||--o{ reservations
+reservations ||--o{ payments
+payments ||--o{ refunds
+reservations ||--o| parking_sessions
+users ||--o{ override_logs
+reservations |o--o{ override_logs
+@enduml

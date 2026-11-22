@@ -1,0 +1,65 @@
+@startuml SD1_reserve_and_pay
+!include _style.iuml
+title SD-1  Reserve and Pay for a Parking Spot (UC-04, UC-05)
+autonumber
+actor Driver
+boundary ":BookingView" as V
+control ":ReservationController" as RC
+control ":AvailabilityController" as AC
+control ":PricingController" as PC
+control ":ForecastController" as FC
+entity ":Reservation" as R
+control ":PaymentController" as PayC
+boundary ":PaymentGatewayAdapter" as PG
+control ":NotificationService" as NS
+
+Driver -> V : enter garage, spot type,\narrival, duration, vehicle
+V -> RC : createHold(user, vehicleId, garageId, type, start, end)
+activate RC
+RC -> RC : validateRequest()\n(lead time, max 24 h, max 3 active, permit)
+RC -> AC : findFreeSpot(garageId, type, start, end)
+activate AC
+AC --> RC : spot / null
+deactivate AC
+alt no spot free
+  RC -> FC : suggestTimes(garageId, start)
+  FC --> RC : quieter times
+  RC --> V : 409 No spot + other times and garages
+  V --> Driver : show alternatives
+else spot found
+  RC -> PC : quote(garageId, type, start, end)
+  activate PC
+  loop each hour of the booking
+    PC -> FC : predict(garageId, hour)
+    FC --> PC : occupancy %
+    PC -> PC : multiplierFor(occupancy, type)\n(floor <= m <= cap, accessible = 1.0)
+  end
+  PC --> RC : quote (base, adjustment, VAT, fee, total)
+  deactivate PC
+  RC -> R ** : create(status = Held, holdExpiresAt = now + 5 min)
+  RC --> V : reservation + quote
+  deactivate RC
+  V --> Driver : price breakdown and 5:00 countdown
+  Driver -> V : choose payment method (token)
+  V -> PayC : pay(user, reservationId, token)
+  activate PayC
+  PayC -> PG : charge(token, total)
+  alt approved
+    PG --> PayC : succeeded, gatewayRef
+    PayC -> R : confirm(token)
+    PayC -> NS : send(user, "booking_confirmed", ...)
+    PayC --> V : confirmed, receiptNo
+    V --> Driver : QR pass, spot, receipt
+  else declined
+    PG --> PayC : declined
+    PayC -> R : paymentAttempts += 1
+    opt paymentAttempts = 3
+      PayC -> R : setStatus(Expired)  // spot released
+    end
+    PayC --> V : declined, attempts left
+  else gateway timeout
+    PayC --> V : pending, not charged, hold kept
+  end
+  deactivate PayC
+end
+@enduml
