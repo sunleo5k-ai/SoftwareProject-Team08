@@ -9,7 +9,7 @@ Instructor: Dr. Muhammad Nasir Mumtaz Bhutta
 |---|---|---|
 | Abdelrahman Abdellatif | 1099415 | auth, reservation, payment, database design |
 | Mohammad Khan | 1097441 | forecast (AI), pricing, web client |
-| Mohammed Alnuaimi | 1095848 | gate-access, admin, reporting, testing |
+| Mohammed Nasser Alnuaimi | 1095848 | gate-access, admin, reporting, testing |
 
 ## Problem
 
