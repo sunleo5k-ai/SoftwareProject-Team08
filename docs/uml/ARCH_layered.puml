@@ -1,0 +1,55 @@
+@startuml ARCH_layered
+!include _style.iuml
+title ARCH-1  SmartPark System Architecture (3-tier, layered client-server)
+skinparam componentStyle rectangle
+skinparam RectangleBorderColor #16324F
+skinparam RectangleBackgroundColor #EEF3FA
+skinparam DatabaseBackgroundColor #EEF3FA
+
+rectangle "Client tier" as CT #FFFFFF {
+  rectangle "Driver / Corporate web client\n(Find Parking, Booking, Payments,\nNavigation, Invoice)" as DW
+  rectangle "Attendant Lane Console" as LCW
+  rectangle "Admin web client\n(Dashboard, Garages, Pricing,\nForecast model, Users)" as AW
+}
+
+rectangle "Application tier - FastAPI server (Python)" as AT #FFFFFF {
+  rectangle "Presentation / boundary layer\nREST API routers: auth, driver, gate, admin\n(JSON over HTTPS, OpenAPI docs, role checks)" as API
+  rectangle "Business / control layer (services)" as BL #FFFFFF {
+    rectangle "auth" as S1
+    rectangle "availability" as S2
+    rectangle "reservation" as S3
+    rectangle "pricing" as S4
+    rectangle "forecast (AI)" as S5
+    rectangle "gate-access" as S6
+    rectangle "notification" as S7
+    rectangle "reporting" as S8
+    rectangle "admin / audit" as S9
+    rectangle "ReservationScheduler\n(background jobs, every 30 s)" as S10
+  }
+  rectangle "Data access layer\nSQLAlchemy ORM entity classes" as DAL
+}
+
+rectangle "Data tier" as DT #FFFFFF {
+  database "Relational database\n(SQLite / PostgreSQL)" as DB
+  rectangle "Trained forecast model\n(joblib file)" as MF
+}
+
+rectangle "External systems (simulated in prototype)" as EXT #FFFBE6 {
+  rectangle "Payment Gateway\n(card tokens)" as PG
+  rectangle "Notification Gateway\n(push / SMS / email)" as NG
+  rectangle "ANPR cameras, QR readers,\nbarriers" as ANPR
+  rectangle "Occupancy sensors" as SEN
+}
+
+DW -down-> API : HTTPS / JSON
+LCW -down-> API : HTTPS / JSON
+AW -down-> API : HTTPS / JSON
+API -down-> BL
+BL -down-> DAL
+DAL -down-> DB : SQL
+S5 -right-> MF
+ANPR -left-> API : lane events\n(device key)
+SEN -left-> API : occupied / free
+BL -right-> PG : charge / refund
+BL -right-> NG : messages
+@enduml

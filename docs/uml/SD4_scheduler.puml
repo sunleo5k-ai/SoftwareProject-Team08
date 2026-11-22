@@ -1,0 +1,36 @@
+@startuml SD4_scheduler
+!include _style.iuml
+title SD-4  Scheduled Jobs: Hold Expiry, Reminders, No-Show Release (FR-11, FR-25, NFR-11)
+autonumber
+participant ":Timer" as T
+control ":ReservationScheduler" as S
+entity ":Reservation" as R
+entity ":PricingRule" as PR
+control ":NotificationService" as NS
+entity ":GateEvent" as GE
+actor Driver
+
+loop every 30 seconds
+  T -> S : runJobs()
+  activate S
+  S -> R : find Held where holdExpiresAt <= now
+  S -> R : setStatus(Expired)
+  S -> R : find Confirmed where start - 30 min <= now < start\nand reminderSent = false
+  loop each reservation
+    S -> NS : send(driver, "reminder", ...)
+    NS --> Driver : "starts in 30 minutes"
+    S -> R : reminderSent = true
+  end
+  S -> R : find Confirmed where start < now
+  loop each reservation
+    S -> PR : graceMinutes
+    alt now > start + grace
+      S -> R : markNoShow()  // spot released
+      S -> NS : send(driver, "grace_expired", ...)
+      NS --> Driver : "spot released"
+    end
+  end
+  S -> GE : anonymise plate reads older than 30 days\n(unless a dispute is open)
+  deactivate S
+end
+@enduml

@@ -1,0 +1,57 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.18, pytest-9.1.1, pluggy-1.6.0 -- /usr/local/bin/python3
+rootdir: smartpark
+configfile: pytest.ini
+testpaths: backend/tests
+plugins: platformdirs-4.13.5, anyio-4.15.1
+collecting ... collected 43 items
+
+backend/tests/test_auth.py::test_TC01_register_verify_with_otp_then_login PASSED
+backend/tests/test_auth.py::test_TC01_register_rejects_bad_input PASSED
+backend/tests/test_auth.py::test_TC02_lockout_after_five_failed_logins PASSED
+backend/tests/test_auth.py::test_TC02_role_based_access PASSED
+backend/tests/test_auth.py::test_TC03_manage_vehicles PASSED
+backend/tests/test_auth.py::test_SEC01_passwords_are_hashed_with_bcrypt PASSED
+backend/tests/test_auth.py::test_SEC02_session_expires_after_15_minutes_idle PASSED
+backend/tests/test_auth.py::test_SEC03_cannot_read_another_users_reservation PASSED
+backend/tests/test_booking.py::test_TC04_search_by_name_and_sort PASSED
+backend/tests/test_booking.py::test_TC05_free_spots_per_floor_follow_sensor_events PASSED
+backend/tests/test_booking.py::test_TC06_accessible_spots_only_for_permit_holders PASSED
+backend/tests/test_booking.py::test_TC07_reserve_and_pay_confirms_booking PASSED
+backend/tests/test_booking.py::test_TC07_business_rules PASSED
+backend/tests/test_booking.py::test_TC08_same_spot_never_double_booked PASSED
+backend/tests/test_booking.py::test_CT01_concurrent_requests_for_last_spot PASSED
+backend/tests/test_booking.py::test_TC09_confirmation_notification_and_qr_pass PASSED
+backend/tests/test_booking.py::test_TC10_cancel_and_modify PASSED
+backend/tests/test_booking.py::test_TC11_no_show_released_after_grace_period PASSED
+backend/tests/test_booking.py::test_TC12_price_breakdown_adds_up PASSED
+backend/tests/test_booking.py::test_TC13_UT02_multiplier_respects_cap_floor_and_accessible PASSED
+backend/tests/test_booking.py::test_TC14_payment_decline_timeout_and_no_card_numbers PASSED
+backend/tests/test_booking.py::test_TC14_hold_expires_after_5_minutes PASSED
+backend/tests/test_booking.py::test_TC15_receipt_and_payment_history PASSED
+backend/tests/test_booking.py::test_TC16_late_cancellation_gives_partial_refund PASSED
+backend/tests/test_booking.py::test_NFR10_no_card_numbers_stored PASSED
+backend/tests/test_booking.py::test_TC24_floor_map_highlights_assigned_spot PASSED
+backend/tests/test_booking.py::test_TC25_reminder_30_minutes_before_start PASSED
+backend/tests/test_booking.py::test_PT01_availability_search_under_2_seconds 
+PT-01 availability search p95 = 20 ms over 40 requests
+PASSED
+backend/tests/test_gate_admin.py::test_TC17_24_hour_forecast PASSED
+backend/tests/test_gate_admin.py::test_TC18_busy_quiet_indicator_and_best_times PASSED
+backend/tests/test_gate_admin.py::test_TC19_retrain_now_and_scheduled PASSED
+backend/tests/test_gate_admin.py::test_ML01_forecast_mae_within_10_points 
+ML-01 hold-out MAE = 4.25 percentage points (4032 hourly samples)
+PASSED
+backend/tests/test_gate_admin.py::test_TC20_anpr_entry_admits_matching_reservation_once PASSED
+backend/tests/test_gate_admin.py::test_TC20_entry_denials PASSED
+backend/tests/test_gate_admin.py::test_TC21_low_confidence_needs_qr PASSED
+backend/tests/test_gate_admin.py::test_TC22_exit_on_time_and_with_overstay PASSED
+backend/tests/test_gate_admin.py::test_TC23_attendant_override_is_logged PASSED
+backend/tests/test_gate_admin.py::test_SEC04_plate_reads_purged_after_30_days PASSED
+backend/tests/test_gate_admin.py::test_TC26_manage_garages_floors_zones_spots PASSED
+backend/tests/test_gate_admin.py::test_TC27_pricing_rules_validation_versioning_and_audit PASSED
+backend/tests/test_gate_admin.py::test_TC28_reports_and_csv_export PASSED
+backend/tests/test_gate_admin.py::test_TC29_user_management_with_audit PASSED
+backend/tests/test_gate_admin.py::test_TC30_corporate_consolidated_invoice PASSED
+
+============================= 43 passed in 10.42s ==============================

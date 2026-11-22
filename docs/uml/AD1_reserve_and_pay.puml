@@ -1,0 +1,47 @@
+@startuml AD1_reserve_and_pay
+!include _style.iuml
+title AD-1  Reserve and Pay for a Parking Spot (UC-04 includes UC-05)
+|Driver|
+start
+repeat
+  :Enter garage, spot type,\narrival time and duration;
+  |SmartPark System|
+  :Check availability for\nthe whole period;
+backward :Suggest quieter times\nand nearby garages;
+repeat while () is ([no spot free])
+-> [spot free];
+fork
+  :Hold matching spot\nfor 5 minutes;
+fork again
+  :Calculate price breakdown\nfrom AI forecast;
+end fork
+|Driver|
+:Review price and confirm booking;
+repeat
+  :Choose payment method;
+  |Payment Gateway|
+  :Process payment;
+  |SmartPark System|
+  if () then ([declined 3 times\nor hold expired])
+    :Release held spot;
+    |Driver|
+    :Read "spot released" message;
+    stop
+  else ([approved or\nattempts left])
+  endif
+  |Driver|
+repeat while () is ([declined])
+-> [approved];
+|SmartPark System|
+:Confirm reservation;
+fork
+  :Generate booking\nreference and QR pass;
+fork again
+  :Send confirmation\nnotification;
+fork again
+  :Update garage\navailability;
+end fork
+|Driver|
+:Receive QR pass and receipt;
+stop
+@enduml

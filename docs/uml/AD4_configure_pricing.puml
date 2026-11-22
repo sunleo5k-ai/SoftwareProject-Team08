@@ -1,0 +1,49 @@
+@startuml AD4_configure_pricing
+!include _style.iuml
+title AD-4  Configure Pricing Rules (UC-12)
+|Garage / Platform Admin|
+start
+:Open "Pricing Rules" for a garage;
+|SmartPark System|
+:Show active rules and\nprice preview;
+repeat
+  |Garage / Platform Admin|
+  :Edit base rates, multipliers,\ncap, floor and policies;
+  |SmartPark System|
+  :Validate values;
+backward :Show errors next\nto the fields;
+repeat while () is ([invalid])
+-> [valid];
+:Show prices at 30%, 60%\nand 90% occupancy;
+|Garage / Platform Admin|
+if () then ([cancel])
+  :Leave rules unchanged;
+  stop
+else ([confirm])
+  |Garage / Platform Admin|
+  :Choose when the change\ntakes effect;
+endif
+|SmartPark System|
+if () then ([another admin\nsaved first])
+  :Warn and ask to reload;
+  |Garage / Platform Admin|
+  :Reload the page;
+  stop
+else ([version unchanged])
+  |SmartPark System|
+  fork
+    :Save new rule version;
+  fork again
+    :Write audit log entry\n(user, time, old and new values);
+  end fork
+  if () then ([effective later])
+    :Queue the new version;
+  else ([effective now])
+    :Use new rules for\nnew quotes;
+  endif
+  :Confirm that rules are saved;
+endif
+|Garage / Platform Admin|
+:See new version in history;
+stop
+@enduml

@@ -1,0 +1,49 @@
+@startuml SD2_enter_garage
+!include _style.iuml
+title SD-2  Enter Garage with ANPR, QR Fallback and Override (UC-08, UC-10)
+autonumber
+actor "ANPR Camera" as Cam
+actor Driver
+boundary ":LaneDeviceInterface" as L
+control ":EntryController" as EC
+entity ":Reservation" as R
+entity ":ParkingSession" as PS
+entity ":GateEvent" as GE
+control ":NotificationService" as NS
+boundary ":LaneConsoleView" as LC
+actor Attendant
+
+Cam -> L : plateRead(garageId, lane, plate, confidence)
+L -> EC : validateEntry(garageId, lane, plate, confidence)
+activate EC
+alt confidence < 0.90
+  EC -> GE ** : create(DENY, LOW_CONFIDENCE)
+  EC --> L : DENY "scan your QR pass"
+  Driver -> L : qrScanned(garageId, lane, token)
+  L -> EC : validateEntry(garageId, lane, qrToken)
+end
+EC -> R : findConfirmed(plate or qrToken, garageId)
+R --> EC : matching reservations
+alt reservation in window (start - 15 min .. end) and not used
+  EC -> PS ** : create(entryTime, method = ANPR/QR)
+  EC -> R : setStatus(InUse)
+  EC -> GE ** : create(ADMIT)
+  EC -> NS : send(driver, "entry", floor and spot)
+  EC --> L : ADMIT, open barrier, spot
+  L --> Driver : barrier opens, "Level 1, spot 1A01"
+else no valid reservation
+  EC -> GE ** : create(DENY, reason code)
+  EC --> L : DENY, barrier closed
+  EC -> LC : alert attendant
+  deactivate EC
+  opt driver shows valid booking
+    Attendant -> LC : override(plate, ADMIT, reason)
+    LC -> EC : override(attendant, garageId, plate, ADMIT, reason)
+    activate EC
+    EC -> PS ** : create(method = OVERRIDE)
+    EC -> EC : record OverrideLog + AuditLog
+    EC --> LC : barrier OPEN, override id
+    deactivate EC
+  end
+end
+@enduml

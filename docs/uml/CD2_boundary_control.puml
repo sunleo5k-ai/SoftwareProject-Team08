@@ -1,0 +1,115 @@
+@startuml CD2_boundary_control
+!include _style.iuml
+title CD-2  Boundary and Control Classes (they use the entity classes of CD-1)
+hide circle
+hide empty members
+skinparam nodesep 25
+skinparam ranksep 70
+skinparam linetype ortho
+
+package "Boundary classes" {
+  class LoginView <<boundary>>
+  class FindParkingView <<boundary>>
+  class BookingView <<boundary>>
+  class MyBookingsView <<boundary>>
+  class NavigationView <<boundary>>
+  class LaneConsoleView <<boundary>>
+  class AdminDashboardView <<boundary>>
+  class PricingRulesView <<boundary>>
+  class GarageManagementView <<boundary>>
+  class LaneDeviceInterface <<boundary>> {
+    +plateRead(garageId, lane, plate, confidence)
+    +qrScanned(garageId, lane, token)
+    +sensorEvent(spotCode, occupied)
+  }
+  class PaymentGatewayAdapter <<boundary>> {
+    +charge(token: String, amount: Float): Result
+    +refund(gatewayRef: String, amount: Float): Result
+  }
+}
+
+package "Control classes" {
+  class AuthController <<control>> {
+    +register(name, email, phone, password): User
+    +verifyOtp(email, code): User
+    +login(email, password): Session
+  }
+  class AvailabilityController <<control>> {
+    +searchGarages(query, type, sort): List
+    +garageAvailability(garageId): Availability
+    +findFreeSpot(garageId, type, start, end): Spot
+  }
+  class ReservationController <<control>> {
+    +createHold(user, vehicleId, garageId, type, start, end): Reservation
+    +cancel(user, reservationId): Float
+    +modify(user, reservationId, start, end): Float
+  }
+  class PaymentController <<control>> {
+    +pay(user, reservationId, token): Payment
+    +issueRefund(reservation, amount): Refund
+  }
+  class PricingController <<control>> {
+    +quote(garageId, type, start, end): Quote
+    +preview(rule): List
+    +validateRule(values): List
+    +saveRule(garageId, values, expectedVersion): PricingRule
+  }
+  class ForecastController <<control>> {
+    +forecast24h(garageId): List
+    +suggestTimes(garageId, start): List
+    +train(): ForecastModel
+    +scheduleRetrain(when: DateTime): ForecastModel
+  }
+  class EntryController <<control>> {
+    +validateEntry(garageId, lane, plate, confidence, qrToken): Decision
+    +override(attendant, garageId, plate, decision, reason): OverrideLog
+  }
+  class ExitController <<control>> {
+    +validateExit(garageId, lane, plate, confidence, qrToken): Decision
+  }
+  class ReservationScheduler <<control>> {
+    +expireHolds(): Integer
+    +releaseNoShows(): Integer
+    +sendReminders(): Integer
+    +purgePlateData(): Integer
+  }
+  class NotificationService <<control>> {
+    +send(user, type, message): Notification
+  }
+  class AdminController <<control>> {
+    +manageGarage(...)
+    +manageSpot(spotId, active, type)
+    +manageUser(userId, role, active)
+  }
+  class ReportController <<control>> {
+    +summary(garageId, days): Report
+    +exportCsv(garageId, days): String
+    +corporateInvoice(account, month): Invoice
+  }
+}
+
+LoginView --> AuthController
+FindParkingView --> AvailabilityController
+FindParkingView --> ForecastController
+BookingView --> ReservationController
+BookingView --> PricingController
+BookingView --> PaymentController
+MyBookingsView --> ReservationController
+NavigationView --> AvailabilityController
+LaneConsoleView --> EntryController
+LaneConsoleView --> ExitController
+LaneDeviceInterface --> EntryController
+LaneDeviceInterface --> ExitController
+AdminDashboardView --> ReportController
+PricingRulesView --> PricingController
+GarageManagementView --> AdminController
+
+ReservationController --> AvailabilityController
+ReservationController --> PricingController
+ReservationController --> NotificationService
+PaymentController --> PaymentGatewayAdapter
+PricingController --> ForecastController
+EntryController --> NotificationService
+ExitController --> PaymentGatewayAdapter
+ReservationScheduler --> NotificationService
+@enduml

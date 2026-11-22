@@ -1,0 +1,48 @@
+@startuml HW_deployment
+!include _style.iuml
+title HW-1  Hardware Organisation and Deployment
+skinparam NodeBackgroundColor #EEF3FA
+skinparam NodeBorderColor #16324F
+
+node "Driver smartphone / PC\n(web browser)" as phone
+node "Garage office PC\n(Attendant Lane Console)" as office
+
+node "Garage site (one per garage)" as site {
+  node "Entry lane" as entry {
+    rectangle "ANPR camera" as cam1
+    rectangle "QR code reader" as qr1
+    rectangle "Barrier controller" as bar1
+    rectangle "Lane display" as disp1
+  }
+  node "Exit lane" as exitl {
+    rectangle "ANPR camera" as cam2
+    rectangle "QR code reader" as qr2
+    rectangle "Barrier controller" as bar2
+  }
+  node "Spot occupancy sensors\n(ultrasonic / magnetic,\none per spot)" as sens
+  node "Edge gateway\n(industrial mini-PC, 4G/fibre)" as gw
+}
+
+node "Cloud / data-centre server" as cloud {
+  node "Application server\n(FastAPI + Uvicorn,\nscheduler, forecast model)" as app
+  database "Database server\n(PostgreSQL, daily backups)" as db
+}
+
+node "Payment gateway" as pg
+node "SMS / email / push provider" as ng
+
+cam1 --> gw : plate + confidence
+qr1 --> gw : QR token
+gw --> bar1 : open / close
+gw --> disp1 : message
+cam2 --> gw
+qr2 --> gw
+gw --> bar2
+sens --> gw : occupied / free\n(LoRaWAN / Zigbee)
+gw --> app : HTTPS REST (device key)
+phone --> app : HTTPS
+office --> app : HTTPS
+app --> db : SQL (TLS)
+app --> pg : HTTPS (tokens only)
+app --> ng : HTTPS
+@enduml
