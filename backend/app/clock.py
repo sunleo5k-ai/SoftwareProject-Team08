@@ -3,10 +3,12 @@
 A time offset can be set for tests and for the live demo
 ("simulate +20 minutes" to show the no-show release).
 """
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 
-GST = ZoneInfo("Asia/Dubai")
+# Gulf Standard Time is always UTC+4 (the UAE has no daylight saving), so a
+# fixed offset is used. This works on every operating system without needing
+# a time-zone database (Windows does not ship one).
+GST = timezone(timedelta(hours=4), "GST")
 _offset = timedelta(0)
 
 
