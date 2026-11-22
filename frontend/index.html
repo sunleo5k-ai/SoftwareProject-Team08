@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmartPark – AI-Powered Smart City Parking</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%230f9d8a%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2720%27 font-family=%27Arial%27 font-weight=%27bold%27 fill=%27white%27 text-anchor=%27middle%27%3EP%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="topbar" id="topbar" hidden>
+    <div class="brand"><span class="logo">P</span>SmartPark</div>
+    <nav id="nav" aria-label="Main menu"></nav>
+    <div class="top-right">
+      <span class="clock" id="clock" title="System time (Gulf Standard Time)"></span>
+      <button class="icon-btn" id="bell" aria-label="Notifications">🔔<span class="badge" id="badge" hidden></span></button>
+      <span class="who" id="who"></span>
+      <button class="btn ghost small" id="logout">Log out</button>
+    </div>
+  </header>
+  <aside class="drawer" id="drawer" hidden aria-label="Notifications">
+    <div class="drawer-head"><h3>Notifications</h3><button class="icon-btn" id="closeDrawer" aria-label="Close">✕</button></div>
+    <div id="notes"></div>
+  </aside>
+  <main id="app"></main>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
