@@ -1,4 +1,4 @@
-# SmartPark – AI-Powered Smart City Parking Network
+# SmartPark – AI-Powered Smart City Parking Networkk
 
 SWE 401 Software Engineering · Course Project · Fall 2026 · Abu Dhabi University
 Instructor: Dr. Muhammad Nasir Mumtaz Bhutta
